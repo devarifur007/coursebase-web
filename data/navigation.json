@@ -1,0 +1,22 @@
+[
+  {
+    "name": "React.js",
+    "slug": "react-js",
+    "sortOrder": 1,
+    "courses": [
+      {
+        "name": "React - The Complete Guide",
+        "slug": "react-the-complete-guide",
+        "sortOrder": 1,
+        "lessons": [
+          {
+            "title": "Getting Started",
+            "slug": "getting-started",
+            "sortOrder": 1,
+            "path": "/docs/react-js/react-the-complete-guide/getting-started"
+          }
+        ]
+      }
+    ]
+  }
+]

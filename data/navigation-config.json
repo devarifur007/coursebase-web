@@ -1,0 +1,5 @@
+{
+  "root": "curriculums",
+  "children": "courses",
+  "node": "lessons"
+}
