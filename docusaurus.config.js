@@ -1,4 +1,6 @@
 import {themes as prismThemes} from 'prism-react-renderer';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 const config = {
   title: 'CourseBase',
@@ -53,6 +55,8 @@ const config = {
         docs: {
           sidebarPath: './sidebars.js',
           editUrl: 'https://github.com/devarifur007/coursebase-web',
+          remarkPlugins: [remarkMath],
+          rehypePlugins: [rehypeKatex],
         },
 
         theme: {
