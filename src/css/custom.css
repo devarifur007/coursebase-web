@@ -1,16 +1,7 @@
-/**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
- */
-
-/* You can override the default Infima variables here. */
-
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 @source "../../docs/**/*.{md,mdx}";
 
-/* your existing custom CSS stays below, unchanged */
 :root {
   --ifm-color-primary: #2e8555;
   --ifm-color-primary-dark: #29784c;
@@ -23,7 +14,6 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
   --ifm-color-primary: #25c2a0;
   --ifm-color-primary-dark: #21af90;
@@ -33,4 +23,94 @@
   --ifm-color-primary-lighter: #32d8b4;
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* =========================================
+   Soft Admonition Theme
+   ========================================= */
+
+.alert {
+  border-width: 1px;
+  box-shadow: none;
+}
+
+/* Light mode */
+:root {
+  --ifm-color-info-contrast-background: #f5f9fc;
+  --ifm-color-success-contrast-background: #f5faf7;
+  --ifm-color-warning-contrast-background: #fffbf3;
+  --ifm-color-danger-contrast-background: #fdf6f6;
+}
+
+/* Dark mode */
+[data-theme='dark'] {
+  --ifm-color-info-contrast-background: #182229;
+  --ifm-color-success-contrast-background: #19251f;
+  --ifm-color-warning-contrast-background: #28241b;
+  --ifm-color-danger-contrast-background: #281c1c;
+}
+
+/* ===============================
+  Responsive Sidebar Width
+  =============================== */
+
+/* Default / small screens */
+:root {
+  --doc-sidebar-width: 220px;
+}
+
+/* Small → Medium */
+@media (min-width: 768px) {
+  :root {
+    --doc-sidebar-width: 200px;
+  }
+
+  .theme-doc-sidebar-container {
+    --doc-sidebar-width: 200px !important;
+  }
+}
+
+/* Medium → Large */
+@media (min-width: 1200px) {
+  :root {
+    --doc-sidebar-width: 220px;
+  }
+
+  .theme-doc-sidebar-container {
+    --doc-sidebar-width: 220px !important;
+  }
+}
+
+/* Large / Wide monitors */
+@media (min-width: 1600px) {
+  :root {
+    --doc-sidebar-width: 350px;
+  }
+
+  .theme-doc-sidebar-container {
+    --doc-sidebar-width: 350px !important;
+  }
+}
+
+/* Allow the documentation container to use available width */
+@media (min-width: 997px) {
+  .container {
+    max-width: 100%;
+  }
+}
+
+
+
+/* =========================
+   Navbar Logo
+   ========================= */
+
+/* Light mode */
+.navbar__logo img {
+  content: url('/img/logo-light.svg');
+}
+
+/* Dark mode */
+[data-theme='dark'] .navbar__logo img {
+  content: url('/img/logo-dark.svg');
 }
