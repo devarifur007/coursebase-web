@@ -1,19 +1,19 @@
 [
   {
-    "name": "React.js",
-    "slug": "react-js",
+    "name": "🔴 Laravel 12 Complete Project: Beginner to Advance (Full Course)",
+    "slug": "laravel-12-complete-project-beginner-to-advance-full-course",
     "sortOrder": 1,
     "courses": [
       {
-        "name": "React - The Complete Guide",
-        "slug": "react-the-complete-guide",
+        "name": "Basic company website, A to Z | Foundation",
+        "slug": "basic-company-website-a-to-z-foundation",
         "sortOrder": 1,
         "lessons": [
           {
-            "title": "Getting Started",
-            "slug": "getting-started",
+            "title": "Setup Laravel with Docker",
+            "slug": "setup-laravel-with-docker",
             "sortOrder": 1,
-            "path": "/docs/react-js/react-the-complete-guide/getting-started"
+            "path": "/docs/laravel-12-complete-project-beginner-to-advance-full-course/basic-company-website-a-to-z-foundation/setup-laravel-with-docker"
           }
         ]
       }

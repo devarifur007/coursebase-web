@@ -1,0 +1,516 @@
+---
+title: "Setup Laravel with Docker"
+sidebar_label: "Setup Laravel with Docker"
+root_name: "🔴 Laravel 12 Complete Project: Beginner to Advance (Full Course)"
+child_name: "Basic company website, A to Z | Foundation"
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Laravel Development Environment with Docker
+
+The goal of this guide is to create an **isolated, consistent, and reproducible** development environment for Laravel using Docker.
+
+Instead of installing PHP, Composer, and the required runtime dependencies on your computer, Docker provides the environment in which the Laravel application runs.
+
+:::info 
+What you will build
+- A Laravel project (`prokognify`) created with the official Composer image
+- A `Dockerfile` that builds a PHP 8.4 CLI image with Composer and PostgreSQL support
+- A `compose.yaml` that runs the app on `http://localhost:8000`
+- A connection to a Neon PostgreSQL database
+:::
+
+---
+
+## Step 1: Install Docker Desktop
+
+1. Download and run the **Docker Desktop Installer.exe** file.
+2. Select the option to use **WSL 2** instead of Hyper-V during setup.
+3. Follow the wizard prompts and **restart your computer** when finished.
+
+---
+
+## Step 2: Check that Docker Desktop is running correctly
+
+Open **PowerShell as Administrator** and run:
+
+```powershell
+docker version
+```
+
+Look at the output:
+
+<Tabs>
+  <TabItem value="healthy" label="Healthy" default>
+
+  If both the **Client** and **Server** sections appear, the engine is responding. Continue to [Step 4](#step-4-create-the-laravel-project).
+
+  </TabItem>
+  <TabItem value="unhealthy" label="Problem">
+
+  - If the **Client** appears but the **Server** fails, Docker Desktop's engine is likely unavailable or unhealthy.
+  - If the error mentions `dockerDesktopLinuxEngine`, the problem is specifically associated with the Linux Engine connection.
+
+  Continue to [Step 3](#step-3-troubleshooting-the-engine).
+
+  </TabItem>
+</Tabs>
+
+---
+
+## Step 3: Troubleshooting the engine
+
+### 3.1 Restart Docker Desktop and WSL 2
+
+This is the first fix to try. Docker Desktop's Linux Engine can get stuck even when the Docker CLI works.
+
+1. Save your work in any running WSL/Linux sessions.
+2. Exit Docker Desktop completely from the Windows system tray.
+3. In PowerShell, run:
+
+   ```powershell
+   wsl --shutdown
+   ```
+
+   :::note
+   `wsl --shutdown` stops the WSL virtual machine, so other running WSL workloads will stop too. It does not normally delete your project files.
+   :::
+
+4. Start Docker Desktop again from the Windows Start menu.
+5. Wait until Docker Desktop reports that the engine is running.
+6. Test the connection:
+
+   ```powershell
+   docker version
+   ```
+
+### 3.2 If the error persists, check WSL
+
+```powershell
+wsl --status
+wsl --list --verbose
+wsl --update
+```
+
+Restart Docker Desktop after the update, then run `docker version` again. Docker recommends using an up-to-date WSL 2 installation.
+
+---
+
+## Step 4: Create the Laravel project
+
+:::warning
+Only continue after `docker version` shows **both** the Client and Server sections.
+:::
+
+Go to the folder where you keep your projects, then run the official Composer image, mount the current folder, and create the project:
+
+```powershell
+docker run --rm -v "${PWD}:/app" -w /app composer:2 create-project laravel/laravel prokognify
+```
+> Expected output
+
+```text
+Unable to find image 'composer:2' locally
+2: Pulling from library/composer
+...
+Status: Downloaded newer image for composer:2
+Creating a "laravel/laravel" project at "./prokognify"
+Installing laravel/laravel (v13.11.0)
+...
+Package operations: 109 installs, 0 updates, 0 removals
+...
+INFO  Application key set successfully.
+INFO  Running migrations.
+
+0001_01_01_000000_create_users_table ......... DONE
+0001_01_01_000001_create_cache_table ......... DONE
+0001_01_01_000002_create_jobs_table .......... DONE
+```
+
+
+Move into the new project folder:
+
+```powershell
+cd prokognify
+ls
+```
+
+You should see the standard Laravel structure: `app`, `bootstrap`, `config`, `database`, `public`, `resources`, `routes`, `storage`, `tests`, `vendor`, `artisan`, `composer.json`, `.env`, and so on.
+
+---
+
+## Step 5: Create the Dockerfile
+
+A **Dockerfile** is a text file containing the instructions Docker uses to build an image.
+
+Create a file named `Dockerfile` in the project root:
+
+```dockerfile title="Dockerfile"
+FROM php:8.4-cli
+
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libpq-dev \
+    && docker-php-ext-install pdo_pgsql \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+COPY . .
+
+RUN composer install --no-interaction --prefer-dist
+
+EXPOSE 8000
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+```
+
+| Instruction | Purpose |
+| --- | --- |
+| `FROM php:8.4-cli` | Base image with PHP 8.4 |
+| `RUN apt-get ... pdo_pgsql` | Installs Git, unzip, and the PostgreSQL PDO driver |
+| `COPY --from=composer:2` | Brings the Composer binary into the image |
+| `WORKDIR /var/www` | Sets the working directory inside the container |
+| `RUN composer install` | Installs PHP dependencies |
+| `CMD ["php", "artisan", "serve", ...]` | Starts the Laravel development server |
+
+---
+
+## Step 6: Create compose.yaml
+
+**Docker Compose** is a tool for defining and running multi-container applications using a YAML configuration file. The `compose.yaml` file describes how the containers and services required by your project should be configured and connected.
+
+Create `compose.yaml` in the project root:
+
+```yaml title="compose.yaml"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www
+      - vendor:/var/www/vendor
+
+volumes:
+  vendor:
+```
+
+:::tip Why a separate `vendor` volume?
+The `.:/var/www` bind mount would otherwise hide the `vendor` folder installed inside the image. The named `vendor` volume keeps the container's dependencies intact and avoids slow Windows file-system access for thousands of vendor files.
+:::
+
+---
+
+## Step 7: Create .dockerignore
+
+The `.dockerignore` file specifies which files and directories Docker should exclude when preparing the build context.
+
+```text title=".dockerignore"
+.env
+.git
+vendor
+node_modules
+storage/logs/*
+```
+
+---
+
+## Step 8: Configure the database in .env
+
+This project uses **PostgreSQL (Neon)** instead of the default SQLite, so the database settings in `.env` must be changed.
+
+```ini title=".env"
+# =========================
+# APPLICATION
+# =========================
+APP_NAME=prokognify
+APP_ENV=local
+APP_KEY=base64:YOUR_GENERATED_APP_KEY
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=en_US
+
+# =========================
+# SECURITY
+# =========================
+BCRYPT_ROUNDS=12
+
+# =========================
+# LOGGING
+# =========================
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_LEVEL=debug
+
+# =========================
+# DATABASE — NEON POSTGRESQL
+# =========================
+DB_CONNECTION=pgsql
+DB_HOST=your-endpoint-pooler.region.aws.neon.tech
+DB_PORT=5432
+DB_DATABASE=neondb
+DB_USERNAME=your_neon_username
+DB_PASSWORD=your_neon_password
+DB_SSLMODE=require
+
+# =========================
+# SESSION
+# =========================
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+
+# =========================
+# FILE STORAGE
+# =========================
+FILESYSTEM_DISK=local
+
+# =========================
+# QUEUE
+# =========================
+QUEUE_CONNECTION=database
+
+# =========================
+# CACHE
+# =========================
+CACHE_STORE=database
+
+# =========================
+# MAIL
+# =========================
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+# =========================
+# VITE
+# =========================
+VITE_APP_NAME="${APP_NAME}"
+```
+
+:::danger Never commit real credentials
+Replace the placeholders with the values from your Neon dashboard. Keep `.env` out of Git (Laravel's default `.gitignore` already does this) and never paste real passwords into documentation, chat, or screenshots. If a password has been exposed, **rotate it** in the Neon console.
+:::
+
+---
+
+## Step 9: Build and start the application
+
+### 9.1 Validate the Compose configuration
+
+From the project root:
+
+```powershell
+docker compose config
+```
+
+This prints the fully resolved configuration (service, environment variables from `.env`, ports, volumes, and networks). Check that the `DB_*` values and the `8000:8000` port mapping are correct.
+
+:::caution
+`docker compose config` prints your environment values, including secrets, in plain text. Do not share its output.
+:::
+
+### 9.2 Build the image and start the service
+
+```powershell
+docker compose up --build -d
+```
+
+> Expected output 
+
+```text
+[+] Building 281.1s (16/16) FINISHED
+ => [app stage-0 2/6] RUN apt-get update && apt-get install -y ...
+ => [app stage-0 6/6] RUN composer install --no-interaction --prefer-dist
+ => => naming to docker.io/library/lms-backend-app:latest
+[+] Running 3/3
+ ✔ Network lms-backend_default  Created
+ ✔ Volume "lms-backend_vendor"  Created
+ ✔ Container lms-backend-app-1  Started
+```
+
+:::note About the names
+Docker Compose derives the project name from the **folder name** (for example `lms-backend` or `prokognify`). The network, volume, image, and container names change accordingly.
+:::
+
+The first build can take several minutes because Docker has to download the PHP image and install system packages and Composer dependencies.
+
+### 9.3 Check container status
+
+```powershell
+docker compose ps
+```
+
+```text
+NAME                IMAGE             COMMAND                  SERVICE   STATUS          PORTS
+lms-backend-app-1   lms-backend-app   "docker-php-entrypoi…"   app       Up 42 minutes   0.0.0.0:8000->8000/tcp
+```
+
+### 9.4 View the latest logs
+
+```powershell
+docker compose logs --tail=100
+```
+
+```text
+app-1  |   INFO  Server running on [http://0.0.0.0:8000].
+app-1  |   Press Ctrl+C to stop the server
+```
+
+---
+
+## Step 10: Verify database connectivity and run migrations
+
+The application uses Neon PostgreSQL, so Docker must be able to resolve and reach the Neon host, and PHP must have the PostgreSQL PDO driver installed.
+
+### 10.1 Check the PHP extensions
+
+```powershell
+docker compose exec app php -m
+```
+
+Confirm that both `PDO` and `pdo_pgsql` appear in the list.
+
+### 10.2 Check Laravel's configuration summary
+
+```powershell
+docker compose exec app php artisan about
+```
+
+Verify these values:
+
+| Setting | Expected value |
+| --- | --- |
+| Laravel Version | 13.x |
+| PHP Version | 8.4.x |
+| Environment | local |
+| Database driver | `pgsql` |
+| Cache / Queue / Session | `database` |
+
+### 10.3 Test the connection
+
+Run a command that requires database access:
+
+```powershell
+docker compose exec app php artisan migrate:status
+```
+
+If this is a new database and you intend to create the schema, run:
+
+```powershell
+docker compose exec app php artisan migrate
+```
+
+```text
+INFO Preparing database.
+Creating migration table ........ DONE
+
+INFO Running migrations.
+0001_01_01_000000_create_users_table ........ DONE
+0001_01_01_000001_create_cache_table ........ DONE
+0001_01_01_000002_create_jobs_table ......... DONE
+```
+
+:::warning
+Migrations change the database. Confirm that `.env` points to the **intended development database** before running them. Do not casually run migrations against production data.
+:::
+
+:::tip Laravel ignores your .env changes?
+Configuration may be cached. Clear it with:
+
+```powershell
+docker compose exec app php artisan config:clear
+```
+:::
+
+---
+
+## Step 11: Open the application
+
+Open your browser and go to:
+
+**[http://localhost:8000](http://localhost:8000)**
+
+You should see the Laravel welcome page.
+
+---
+
+## Optional: Instant run without Compose
+
+Since PHP is not installed locally, you can run Artisan inside a throwaway container. From the `prokognify` folder:
+
+```powershell
+docker run --rm -it -v "${PWD}:/app" -w /app -p 8000:8000 php:8.3-cli php artisan serve --host=0.0.0.0 --port=8000
+```
+
+:::caution Not recommended for backend development
+This quick method uses the plain `php:8.3-cli` image, which does **not** include the `pdo_pgsql` extension or Composer. Anything that needs the PostgreSQL database will fail. It is fine for a quick look at the welcome page, but for real backend work use the Compose setup above.
+:::
+
+---
+
+## Common daily commands
+
+Run these from the folder containing `compose.yaml`.
+
+### Container lifecycle
+
+| Task | Command |
+| --- | --- |
+| Start the containers | `docker compose up -d` |
+| Rebuild and start after Dockerfile or dependency changes | `docker compose up --build -d` |
+| Stop the containers without deleting volumes | `docker compose stop` |
+| Stop and remove the containers and Compose network | `docker compose down` |
+
+:::danger Avoid `docker compose down -v`
+`docker compose down` does not normally delete named volumes. Avoid the `-v` flag unless you deliberately want to delete named volumes, including the `vendor` volume in this setup.
+:::
+
+### Logs and shell
+
+| Task | Command |
+| --- | --- |
+| Follow logs continuously | `docker compose logs -f app` |
+| Open a shell in the running container | `docker compose exec app bash` |
+| Shell fallback if Bash is unavailable | `docker compose exec app sh` |
+
+Press `Ctrl+C` to stop following logs. This does not stop the container.
+
+### Artisan commands
+
+```powershell
+docker compose exec app php artisan --version
+docker compose exec app php artisan route:list
+docker compose exec app php artisan about
+```
+
+### Composer commands
+
+```powershell
+docker compose exec app composer install
+docker compose exec app composer dump-autoload
+```
+
+---
+
+## Troubleshooting summary
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `docker version` shows Client but no Server | Docker engine not running | Restart Docker Desktop, run `wsl --shutdown`, start again |
+| Error mentions `dockerDesktopLinuxEngine` | Linux engine connection problem | Run `wsl --update`, restart Docker Desktop |
+| `could not find driver` | `pdo_pgsql` missing | Check `php -m`; rebuild with `docker compose up --build -d` |
+| Cannot reach Neon host | Network or DNS issue, wrong host | Verify `DB_HOST` and `DB_SSLMODE=require` in `.env` |
+| `.env` changes ignored | Cached configuration | `docker compose exec app php artisan config:clear` |
+| Port 8000 already in use | Another process using the port | Stop it, or change the left side of `"8000:8000"` in `compose.yaml` |
