@@ -1,12 +1,6 @@
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
-
 @source "../../docs/**/*.{md,mdx}";
-
-
-/* =========================================================
-   Docusaurus Theme Colors
-   ========================================================= */
 
 :root {
   --ifm-color-primary: #2e8555;
@@ -16,16 +10,9 @@
   --ifm-color-primary-light: #33925d;
   --ifm-color-primary-lighter: #359962;
   --ifm-color-primary-lightest: #3cad6e;
-
   --ifm-code-font-size: 95%;
-
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
-
-
-/* =========================================================
-   Dark Mode
-   ========================================================= */
 
 [data-theme='dark'] {
   --ifm-color-primary: #25c2a0;
@@ -35,23 +22,19 @@
   --ifm-color-primary-light: #29d5b0;
   --ifm-color-primary-lighter: #32d8b4;
   --ifm-color-primary-lightest: #4fddbf;
-
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
-
-/* =========================================================
+/* =========================================
    Soft Admonition Theme
-   ========================================================= */
+   ========================================= */
 
 .alert {
   border-width: 1px;
   box-shadow: none;
 }
 
-
-/* Light Mode */
-
+/* Light mode */
 :root {
   --ifm-color-info-contrast-background: #f5f9fc;
   --ifm-color-success-contrast-background: #f5faf7;
@@ -59,9 +42,7 @@
   --ifm-color-danger-contrast-background: #fdf6f6;
 }
 
-
-/* Dark Mode */
-
+/* Dark mode */
 [data-theme='dark'] {
   --ifm-color-info-contrast-background: #182229;
   --ifm-color-success-contrast-background: #19251f;
@@ -69,415 +50,81 @@
   --ifm-color-danger-contrast-background: #281c1c;
 }
 
+/* ===============================
+  Responsive Sidebar Width
+  =============================== */
 
-/* =========================================================
-   RESPONSIVE SIDEBAR WIDTH
-   ========================================================= */
-
-/* Small screens */
-
-:root {
+/* Defined on html:root (not plain :root) so it always beats the theme's own
+   `:root { --doc-sidebar-width: 300px }`, whatever order the CSS loads in.
+   <main> reserves space using this same variable, so if the theme's 300px
+   wins, the sidebar looks narrow but the content area still leaves 300px. */
+html:root {
   --doc-sidebar-width: 220px;
 }
 
-
-/* 768px+ */
-
-@media screen and (min-width: 768px) {
-  :root {
+@media (min-width: 768px) {
+  html:root {
     --doc-sidebar-width: 200px;
   }
-
-  .theme-doc-sidebar-container {
-    --doc-sidebar-width: 200px !important;
-  }
 }
 
-
-/* 1200px+ */
-
-@media screen and (min-width: 1200px) {
-  :root {
+@media (min-width: 1200px) {
+  html:root {
     --doc-sidebar-width: 220px;
   }
+}
 
-  .theme-doc-sidebar-container {
-    --doc-sidebar-width: 220px !important;
+@media (min-width: 1600px) {
+  html:root {
+    --doc-sidebar-width: 350px;
   }
 }
 
+/* ===============================
+  Docs Content + TOC Layout
+  =============================== */
 
-/* 1600px+ */
+/* Why the odd `:not(#\#)` chains: Docusaurus compiles its own rules with
+   extra `:not(#\#)` terms (it flattens CSS cascade layers that way), which
+   gives them ID-level specificity. A plain `!important` rule of ours loses to
+   `.docItemCol { max-width: 75% !important }` in that case. Three of them
+   here outrank the theme's two, so these overrides win in every setup. */
 
-@media screen and (min-width: 1600px) {
-  :root {
-    --doc-sidebar-width: 280px;
-  }
-
-  .theme-doc-sidebar-container {
-    --doc-sidebar-width: 280px !important;
-  }
-}
-
-
-/* =========================================================
-   FULL WIDTH DOCUMENTATION LAYOUT
-   =========================================================
-
-   Desktop layout:
-
-   ┌────────────┬──────────────────────────────┬───────────┐
-   │            │                              │           │
-   │  SIDEBAR   │       MAIN CONTENT           │    TOC    │
-   │   280px    │       FLEXIBLE WIDTH         │   260px   │
-   │            │                              │           │
-   └────────────┴──────────────────────────────┴───────────┘
-
-   The main content receives ALL remaining width.
-   ========================================================= */
-
-@media screen and (min-width: 997px) {
-
-  /* ---------------------------------------------------------
-     Root documentation page
-     --------------------------------------------------------- */
-
-  .theme-doc-page {
-    width: 100% !important;
-    max-width: none !important;
-  }
-
-
-  /* ---------------------------------------------------------
-     Main docs wrapper
-     --------------------------------------------------------- */
-
-  .theme-doc-page .container {
-    width: 100% !important;
-    max-width: none !important;
-
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-
-  /* ---------------------------------------------------------
-     Documentation row
-     --------------------------------------------------------- */
-
-  .theme-doc-page .row {
-    width: 100% !important;
-    max-width: none !important;
-
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-
-    display: flex !important;
-    flex-wrap: nowrap !important;
-  }
-
-
-  /* =========================================================
-     SIDEBAR
-     ========================================================= */
-
-  .theme-doc-sidebar-container {
-    width: var(--doc-sidebar-width) !important;
-    min-width: var(--doc-sidebar-width) !important;
-    max-width: var(--doc-sidebar-width) !important;
-
-    flex: 0 0 var(--doc-sidebar-width) !important;
-  }
-
-
-  /* =========================================================
-     MAIN DOCUMENT AREA
-     ========================================================= */
-
-  /*
-   * This is the most important section.
-   *
-   * The main column takes ALL remaining horizontal space
-   * between the sidebar and the TOC.
-   */
-
-  .theme-doc-page .row > .col {
-    min-width: 0;
-  }
-
-
-  .docItemCol {
-    width: auto !important;
-    min-width: 0 !important;
-    max-width: none !important;
-
-    flex: 1 1 auto !important;
-  }
-
-
-  .docItemContainer {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0 !important;
-  }
-
-
-  .theme-doc-main {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0 !important;
-  }
-
-
-  .theme-doc-item {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0 !important;
-  }
-
-
-  /* =========================================================
-     MARKDOWN CONTENT
-     ========================================================= */
-
-  .theme-doc-markdown {
-    width: 100% !important;
-    max-width: none !important;
-
-    min-width: 0 !important;
-
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-
-
-  /*
-   * Prevent the markdown wrapper from imposing
-   * another hidden maximum width.
-   */
-
-  .theme-doc-markdown.markdown {
-    width: 100% !important;
-    max-width: none !important;
-  }
-
-
-  /* =========================================================
-     TABLE OF CONTENTS
-     ========================================================= */
-
-  /*
-   * Fixed 260px TOC.
-   *
-   * The main content gets everything else.
-   */
-
-  .theme-doc-toc-desktop {
-    width: 260px !important;
-    min-width: 260px !important;
-    max-width: 260px !important;
-
-    flex: 0 0 260px !important;
-
-    box-sizing: border-box !important;
-  }
-
-
-  /*
-   * TOC internal width
-   */
-
-  .theme-doc-toc-desktop .table-of-contents {
-    width: 100% !important;
+@media (min-width: 997px) {
+  /* <main> > .container > .row : stop the container from capping/centering
+     the docs area (Infima caps it at 1140px / 1320px and centers it) */
+  html:not(#\#):not(#\#):not(#\#) [class*='docMainContainer'] > .container {
     max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Content column: drop the 75% cap, fill whatever the TOC doesn't use */
+  html:not(#\#):not(#\#):not(#\#) [class*='docItemCol'] {
+    max-width: none !important;
+    flex: 1 1 0 !important;
+    min-width: 0;
+    /* breathing room for the content only (the TOC column is untouched) */
+    padding-left: 3rem !important;
+    padding-right: 3.5rem !important;
+  }
+
+  /* TOC column: fixed width instead of 25% of the row */
+  html:not(#\#):not(#\#):not(#\#) [class*='docItemCol'] + .col--3 {
+    flex: 0 0 240px !important;
+    max-width: 240px !important;
   }
 }
 
+@media (min-width: 1600px) {
+  /* More room on large monitors */
+  html:not(#\#):not(#\#):not(#\#) [class*='docItemCol'] {
+    padding-left: 4.5rem !important;
+    padding-right: 5rem !important;
+  }
 
-/* =========================================================
-   EXTRA-WIDE MONITORS
-   ========================================================= */
-
-@media screen and (min-width: 1600px) {
-
-  /*
-   * Exact target:
-   *
-   * Sidebar = 280px
-   * Main    = remaining width
-   * TOC     = 260px
-   */
-
-  .theme-doc-sidebar-container {
-    width: 280px !important;
-    min-width: 280px !important;
-    max-width: 280px !important;
-
+  html:not(#\#):not(#\#):not(#\#) [class*='docItemCol'] + .col--3 {
     flex-basis: 280px !important;
-  }
-
-
-  .theme-doc-toc-desktop {
-    width: 260px !important;
-    min-width: 260px !important;
-    max-width: 260px !important;
-
-    flex-basis: 260px !important;
-  }
-
-
-  /*
-   * Maximum possible main-content width.
-   */
-
-  .docItemCol {
-    flex-grow: 1 !important;
-    flex-shrink: 1 !important;
-    flex-basis: 0 !important;
-
-    width: auto !important;
-    max-width: none !important;
-  }
-}
-
-
-/* =========================================================
-   REMOVE EXTRA INFIMA COLUMN LIMITS
-   ========================================================= */
-
-@media screen and (min-width: 997px) {
-
-  /*
-   * Docusaurus uses Infima .col classes internally.
-   * Remove their percentage-based width limitations
-   * from the document content column.
-   */
-
-  .theme-doc-page .row > .col:not(
-    .theme-doc-toc-desktop
-  ) {
-    width: auto !important;
-    max-width: none !important;
-  }
-
-
-  /*
-   * The main content column should always grow.
-   */
-
-  .theme-doc-page .row > .col.docItemCol {
-    flex: 1 1 0% !important;
-
-    width: auto !important;
-    max-width: none !important;
-
-    min-width: 0 !important;
-  }
-}
-
-
-/* =========================================================
-   DOCUMENT CONTENT SPACING
-   ========================================================= */
-
-@media screen and (min-width: 997px) {
-
-  .theme-doc-markdown {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-}
-
-
-/* =========================================================
-   LARGE SCREEN CONTENT SPACING
-   ========================================================= */
-
-@media screen and (min-width: 1600px) {
-
-  .theme-doc-markdown {
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-}
-
-
-/* =========================================================
-   NAVBAR LOGO
-   ========================================================= */
-
-/* Light Mode */
-
-/*.navbar__logo img {*/
-/*  content: url('/img/logo-light.svg');*/
-/*}*/
-
-
-/* Dark Mode */
-
-/*[data-theme='dark'] .navbar__logo img {*/
-/*  content: url('/img/logo-dark.svg');*/
-/*}*/
-
-
-/* =========================================================
-   MOBILE / TABLET
-   ========================================================= */
-
-/*@media screen and (max-width: 996px) {*/
-
-/*  !**/
-/*   * Do not apply the desktop fixed-column layout*/
-/*   * on mobile/tablet.*/
-/*   *!*/
-
-/*  .theme-doc-page .container {*/
-/*    width: 100% !important;*/
-/*    max-width: 100% !important;*/
-/*  }*/
-
-/*  .theme-doc-page .row {*/
-/*    display: block !important;*/
-/*  }*/
-
-/*  .theme-doc-sidebar-container {*/
-/*    width: auto !important;*/
-/*    min-width: 0 !important;*/
-/*    max-width: none !important;*/
-/*  }*/
-
-/*  .docItemCol {*/
-/*    width: 100% !important;*/
-/*    max-width: 100% !important;*/
-/*  }*/
-
-/*  .theme-doc-markdown {*/
-/*    width: 100% !important;*/
-/*    max-width: 100% !important;*/
-
-/*    padding-left: 0;*/
-/*    padding-right: 0;*/
-/*  }*/
-
-/*  .theme-doc-toc-desktop {*/
-/*    width: auto !important;*/
-/*    min-width: 0 !important;*/
-/*    max-width: none !important;*/
-/*  }*/
-/*}*/
-
-@media screen and (min-width: 997px) {
-  .theme-doc-toc-desktop {
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-  }
-
-  .theme-doc-toc-desktop .table-of-contents {
-    overflow: visible;
+    max-width: 280px !important;
   }
 }
